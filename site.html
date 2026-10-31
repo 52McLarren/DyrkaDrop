@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8"><title>DyrkaDrop</title>
+    <style>
+        body { background: #06080c; color: #fff; font-family: sans-serif; text-align: center; margin: 0; user-select: none; }
+        header { background: #0e131b; padding: 15px; border-bottom: 2px solid #161f2c; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
+        .flex { display: flex; justify-content: center; align-items: center; gap: 20px; margin: 30px auto; max-width: 800px; }
+        .card { background: #0e131b; border: 1px solid #161f2c; border-radius: 12px; padding: 15px; width: 200px; }
+        .img-box { height: 90px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 10px 0; background: radial-gradient(circle, rgba(69,243,255,0.1) 0%, transparent 70%); }
+        .ring-container { position: relative; width: 200px; height: 200px; }
+        .ring-rotate { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: #090c10; border: 6px solid #161f2c; left:0; top:0; }
+        #sector { position: absolute; width: 100%; height: 100%; border-radius: 50%; mask: radial-gradient(transparent 75px, #000 76px); -webkit-mask: radial-gradient(transparent 75px, #000 76px); }
+        .notch { position: absolute; top: -10px; left: calc(50% - 5px); width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 8px solid #fff; z-index: 15; }
+        .center { position: absolute; width: 70px; height: 70px; background: #0e131b; border-radius: 50%; top: 65px; left: 65px; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; border: 2px solid #161f2c; }
+        .btn { background: linear-gradient(135deg, #00ff87, #60efff); border: none; padding: 14px 50px; font-size: 1.2rem; font-weight: bold; border-radius: 25px; cursor: pointer; color: #000; box-shadow: 0 0 15px rgba(0,255,135,0.2); }
+        .btn:disabled { background: #333; color: #666; cursor: not-allowed; box-shadow: none; }
+        .s-btn { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: #bbb; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 0.7rem; }
+        .music-btn { background: #1f2330; border: 1px solid #45f3ff; color: #45f3ff; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: bold; box-shadow: 0 0 10px rgba(69,243,255,0.1); }
+        .inv { background: #0e131b; border-radius: 12px; padding: 15px; margin: 20px auto; max-width: 600px; text-align: left; }
+        .grid { display: flex; flex-wrap: wrap; gap: 8px; min-height: 55px; margin-top: 10px; }
+        .item { background: #06080c; border: 1px solid #45f3ff; border-radius: 6px; width: 55px; height: 55px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; position: relative; }
+        .item span { font-size: 0.5rem; color: #ff3838; font-weight: bold; position: absolute; bottom: 2px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div>by: <b>52McLarren</b></div>
+        <button class="music-btn" onclick="toggleMusic()">🎵 Врубить Музон</button>
+        <div>DyrkaDrop</div>
+    </header>
+    <div class="flex">
+        <div class="card" style="border-color:#eb4b4b"><span>ЦЕЛЬ</span><div class="img-box" style="background:radial-gradient(circle, rgba(235,75,75,0.15) 0%, transparent 70%)">🐉</div><b>AWP</b><div style="color:#eb4b4b;font-size:0.85rem">Dragon Lore</div></div>
+        <div class="ring-container">
+            <div class="notch"></div>
+            <div class="ring-rotate" id="ring"><div id="sector"></div></div>
+            <div class="center"><b>15%</b><span style="color:#627485;font-size:0.6rem">Шанс</span></div>
+        </div>
+        <div class="card" style="border-color:#45f3ff"><span>ТВОЙ СКИН</span><div class="img-box" id="icon">🦈</div><b id="wep">SSG 08</b><div id="name" style="color:#45f3ff;font-size:0.85rem">Акула</div><button class="s-btn" onclick="nextSkin()" id="rBtn">🎲 Сменить</button></div>
+    </div>
+    <button class="btn" id="go" onclick="spin()">АПГРЕЙД</button>
+    <div id="status" style="font-size:1.4rem;font-weight:900;margin:15px 0;min-height:25px;"></div>
+    <div class="inv">
+        <div style="font-size:0.8rem;border-bottom:1px solid #161f2c;padding-bottom:5px"><b>🎒 Инвентарь</b> <span style="color:#ff3838;float:right">*No Out</span></div>
+        <div class="grid" id="grid"><div id="empty" style="color:#444;font-size:0.8rem;margin:auto">Тут будут твои Dragon Lore</div></div>
+    </div>
+
+    <script>
+        const skins = [{w:"SSG 08",n:"Акула",i:"🦈"},{w:"M4A4",n:"Вой",i:"🐺"},{w:"AK-47",n:"Огненный змей",i:"🐍"},{w:"Glock",n:"Градиент",i:"🌈"},{w:"Нож",n:"М9 Байонет",i:"🔪"},{w:"Deagle",n:"Пламя",i:"🔥"}];
+        let cur, spinning=false;
+
+        // Инициализация аудио-элементов через интернет
+        const spinSound = new Audio('https://mixkit.co');
+        const winSound = new Audio('https://mixkit.co');
+        const bgMusic = new Audio('https://soundhelix.com'); // Резервный поток музона
+        bgMusic.loop = true;
+
+        function setSkin(s){
+            cur=s; document.getElementById('icon').textContent=s.i; document.getElementById('wep').textContent=s.w; document.getElementById('name').textContent=s.n;
+            document.getElementById('sector').style.background=`conic-gradient(#00ff87 0deg,#00ff87 54deg,transparent 54deg)`;
+            document.getElementById('sector').style.transform=`rotate(-27deg)`;
+        }
+        function nextSkin(){if(!spinning) setSkin(skins[Math.floor(Math.random()*skins.length)]); document.getElementById('status').textContent=''; document.getElementById('ring').style.borderColor='#161f2c';}
+        
+        function toggleMusic() {
+            if (bgMusic.paused) { bgMusic.play(); document.querySelector('.music-btn').textContent = "⏸️ Пауза"; } 
+            else { bgMusic.pause(); document.querySelector('.music-btn').textContent = "🎵 Врубить Музон"; }
+        }
+
+        function spin() {
+            if(spinning)return; spinning=true; document.getElementById('status').textContent=''; document.getElementById('ring').style.borderColor='#161f2c';
+            document.getElementById('go').disabled=document.getElementById('rBtn').disabled=true;
+            
+            // Запуск звука прокрутки
+            spinSound.currentTime = 0; spinSound.play();
+            
+            let win=Math.random()*100<=15, angle=win?(Math.random()*54)-27:27+(Math.random()*306), finalDeg=1800-angle, ring=document.getElementById('ring');
+            
+            // Замедленное вращение (переход увеличен до 4 секунд)
+            ring.style.transition='transform 4s cubic-bezier(0.1, 0.8, 0.2, 1)'; ring.style.transform=`rotate(${finalDeg}deg)`;
+            
+            setTimeout(()=>{
+                spinning=false; document.getElementById('go').disabled=document.getElementById('rBtn').disabled=false; let st=document.getElementById('status');
+                if(win){
+                    winSound.play();
+                    st.textContent="УСПЕШНО! 🎉"; st.style.color="#00ff87"; ring.style.borderColor="#00ff87"; 
+                    let e=document.getElementById('empty'); if(e)e.remove(); 
+                    document.getElementById('grid').innerHTML=`<div class="item">🐉<span>NoOut</span></div>`+document.getElementById('grid').innerHTML;
+                } else {
+                    st.textContent="НЕУДАЧА ❌"; st.style.color="#ff3838"; ring.style.borderColor="#ff3838";
+                }
+                setTimeout(()=>{ring.style.transition='none'; ring.style.transform=`rotate(${finalDeg%360}deg)`;},100);
+            },4000); // Таймер синхронизирован с 4 секундами анимации
+        }
+        setSkin(skins[0]);
+    </script>
+</body>
+</html>
